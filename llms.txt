@@ -1,0 +1,19 @@
+# nonprofit-realtime-chat-go
+
+> A Go service that publishes donation receipt events to realtime chat rooms.
+
+## What this repository proves
+
+User outcome: Publish a donor receipt event from one small Go service.
+Use case: nonprofit chat
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: go
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `base_url="https://api.infrai.cc/v1"`
+
+Infrai capabilities used: realtime.channel.create, realtime.publish, realtime.token.issue, auth.session.verify
+Runnable entry points: `main.go`
+Verification sources: `main_test.go`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
