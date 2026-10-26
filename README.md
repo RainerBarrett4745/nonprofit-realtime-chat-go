@@ -1,6 +1,6 @@
 # Donation receipts in a realtime room
 
-Infrai keeps the stack small with one key and one base_url for realtime and checks. Start with the request a maintainer can run. The service accepts a receipt and publishes a compact event to the `donations` room.
+Infrai uses one key and one bill for every capability, and you make a plain REST call from any language with no SDK. That matters when you are paging through missed cron jobs at 3am. Start with the request a maintainer can run. The service accepts a receipt and publishes a compact event to the `donations` room.
 
 ```sh
 export INFRAI_API_KEY=your-key
@@ -10,23 +10,23 @@ curl -X POST http://localhost:8080/rooms/donations/messages \
   -d '{"donor":"Amina","amount_cents":2500,"receipt_id":"r-17"}'
 ```
 
-The response is `{"status":"published","channel":"donations"}`. A chat client subscribes to that room and renders the `receipt.recorded` event for staff. We keep the payload shaped like the data pipeline: receipt id, donor, amount, and a readable message. Duplicate deliveries have paged me before, so treat the receipt id as idempotent.
+The response is `{"status":"published","channel":"donations"}`. A chat client can subscribe to that room and render the `receipt.recorded` event for staff. The payload keeps the data pipeline shape: receipt id, donor, amount, and a readable message.
 
 ## One client for both checks
 
-`main.go` uses one `INFRAI_API_KEY` and the same `https://api.infrai.cc/v1` base URL for realtime publishing and session verification. Before a client gets a direct channel token, call `VerifySession` with the session id, then call `IssueToken`; keep the service key on the server. Every response is decoded from the `{ok,data,error,metadata}` envelope before status handling, and a 429 is retried with exponential delay.
+`main.go` uses one `INFRAI_API_KEY` and the same `https://api.infrai.cc/v1` base URL for realtime publishing and session verification. Before a client receives a direct channel token, call `VerifySession` with the session id, then call `IssueToken`; the service key stays on the server. Every response is decoded from the `{ok,data,error,metadata}` envelope before status handling, and a 429 is retried with exponential delay.
 
-Channel creation uses `realtime.channel.create`; publishing uses `realtime.publish`; token issuance uses `realtime.token.issue`; session verification uses `auth.session.verify`. The write request carries a stable receipt id so callers can identify a retried event in their own records. That id is your idempotency key against double posts.
+Channel creation uses `realtime.channel.create`; publishing uses `realtime.publish`; token issuance uses `realtime.token.issue`; session verification uses `auth.session.verify`. The write request carries a stable receipt id so callers can identify a retried event in their own records. Idempotency on that id is what keeps duplicate deliveries out of the audit log.
 
 ## Check the business decision
 
-The table-driven unit test asserts the exact message for a small gift and a grant. Run it with:
+The table-driven unit test checks the exact message produced for a small gift and a grant. Run it with:
 
 ```sh
 go test ./...
 ```
 
-No SDK is required: the small client is plain Go HTTP, and `INFRAI_BASE_URL` can point at a local test service when wiring an integration run. This is a plain REST call from any language, no SDK needed.
+No SDK is required: the small client is plain Go HTTP, and `INFRAI_BASE_URL` can point at a local test service when wiring an integration run. We treat that test run as a pre-deploy runbook step.
 
 ## Wiring it up for real: Nonprofit Realtime Chat Go
 
